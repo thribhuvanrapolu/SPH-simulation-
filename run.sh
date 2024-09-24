@@ -19,28 +19,49 @@ set -e
 # Display commands being run.
 set -x
 
-TMP_DIR=`mktemp -d`
 
-virtualenv --python=python3.6 "${TMP_DIR}/learning_to_simulate"
-source "${TMP_DIR}/learning_to_simulate/bin/activate"
+# Define the dataset name
+DATASET_NAME="WaterDropSample"
+
+# Get the current working directory and append "/learning_to_simulate"
+temp=$(pwd)
+temp+="/learning_to_simulate"
+
+# Initialize the folder name with the dataset name followed by _temp_1
+folder_name="${DATASET_NAME}_temp_1"
+counter=1
+
+# Check if the folder already exists, if so, increment the counter
+while [ -d "$temp/$folder_name" ]; do
+    counter=$((counter + 1))
+    folder_name="${DATASET_NAME}_temp_$counter"
+done
+
+# Create the folder
+mkdir "$temp/$folder_name"
+
+# Store the entire path of the created folder in a new variable
+TMP_DIR="$temp/$folder_name"
+
+
+# virtualenv --python=python3.6 "${TMP_DIR}/learning_to_simulate"
+# source "${TMP_DIR}/learning_to_simulate/bin/activate"
 
 # Install dependencies.
-pip install --upgrade -r learning_to_simulate/requirements.txt
+# pip install --upgrade -r learning_to_simulate/requirements.txt
 
 # Run the simple demo with dummy inputs.
 python -m learning_to_simulate.model_demo
 
 # Run some training and evaluation in one of the dataset samples.
 
-# Download a sample of a dataset.
-DATASET_NAME="WaterDropSample"
 
 bash ./learning_to_simulate/download_dataset.sh ${DATASET_NAME} "${TMP_DIR}/datasets"
 
 # Train for a few steps.
 DATA_PATH="${TMP_DIR}/datasets/${DATASET_NAME}"
 MODEL_PATH="${TMP_DIR}/models/${DATASET_NAME}"
-python -m learning_to_simulate.train --data_path=${DATA_PATH} --model_path=${MODEL_PATH} --num_steps=10
+python -m learning_to_simulate.train --data_path=${DATA_PATH} --model_path=${MODEL_PATH} --num_steps=50
 
 # Evaluate on validation split.
 python -m learning_to_simulate.train --data_path=${DATA_PATH} --model_path=${MODEL_PATH} --mode="eval" --eval_split="valid"
@@ -51,7 +72,7 @@ mkdir -p ${ROLLOUT_PATH}
 python -m learning_to_simulate.train --data_path=${DATA_PATH} --model_path=${MODEL_PATH} --mode="eval_rollout" --output_path=${ROLLOUT_PATH}
 
 # Plot the first rollout.
-python -m learning_to_simulate.render_rollout --rollout_path="${ROLLOUT_PATH}/rollout_test_0.pkl" --block_on_show=False
+python -m learning_to_simulate.render_rollout --rollout_path="${ROLLOUT_PATH}/rollout_test_0.pkl" --block_on_show=False --save_video_name="${TMP_DIR}/${TMP_DIR}.mp4"
 
 # Clean up.
 # rm -r ${TMP_DIR}

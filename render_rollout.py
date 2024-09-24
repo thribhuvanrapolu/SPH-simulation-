@@ -38,6 +38,7 @@ import numpy as np
 flags.DEFINE_string("rollout_path", None, help="Path to rollout pickle file")
 flags.DEFINE_integer("step_stride", 3, help="Stride of steps to skip.")
 flags.DEFINE_boolean("block_on_show", True, help="For test purposes.")
+flags.DEFINE_string("save_video_name",None,help="path to save video")
 
 FLAGS = flags.FLAGS
 
@@ -95,6 +96,8 @@ def main(unused_argv):
   unused_animation = animation.FuncAnimation(
       fig, update,
       frames=np.arange(0, num_steps, FLAGS.step_stride), interval=10)
+  
+  unused_animation.save("FLAGS.save_video_name")
   plt.show(block=FLAGS.block_on_show)
 
 
